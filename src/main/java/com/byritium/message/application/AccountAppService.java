@@ -1,5 +1,8 @@
 package com.byritium.message.application;
 
+import com.byritium.message.component.KafkaSender;
+import com.byritium.message.component.RedisClient;
+import com.byritium.message.constance.MessageTopic;
 import com.byritium.message.domain.account.entity.AccountInfo;
 import com.byritium.message.domain.account.repository.AccountRepository;
 import com.byritium.message.domain.account.repository.SessionRepository;
@@ -7,7 +10,6 @@ import com.byritium.message.server.dto.IdAuth;
 import com.byritium.message.server.dto.MessagePayload;
 import io.netty.channel.Channel;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -19,9 +21,13 @@ public class AccountAppService {
     private SessionRepository sessionRepository;
 
     @Autowired
-    private KafkaTemplate<String, String> kafkaTemplate;
+    private KafkaSender kafKaSender;
 
-    public void create() {
+    @Autowired
+    private RedisClient redisClient;
+
+    public void create(AccountInfo accountInfo) {
+        redisClient.set(accountInfo.getKey(), accountInfo);
     }
 
     public void message(MessagePayload messagePayload, Channel channel) {
@@ -33,7 +39,9 @@ public class AccountAppService {
 
         sessionRepository.save(username, identifier, channel.id());
 
-        kafkaTemplate.send("", "");
+        String content = messagePayload.getSubject().getContent();
+        kafKaSender.send(MessageTopic.SEND_CUSTOMER, content);
+        kafKaSender.send(MessageTopic.SEND_TERMINAL, content);
     }
 
 }
