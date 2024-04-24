@@ -1,0 +1,54 @@
+server:
+  port: 9999
+spring:
+  application:
+    name: conn
+  data:
+    mongodb:
+      uri: mongodb://admin:admin@localhost/conn
+  redis:
+    host: 127.0.0.1
+    port: 6379
+    password:
+    #    cluster:
+    #      nodes:
+    #        - 127.0.0.1:6379
+    #        - 127.0.0.1:6380
+    #        - 127.0.0.1:6381
+    #        - 127.0.0.1:6382
+    lettuce:
+      pool:
+        max-idle: 8
+        min-idle: 0
+        max-active: 8
+        max-wait: -1
+    timeout: 3000
+#  kafka:
+#    producer:
+#      bootstrap-servers: 127.0.0.1:9092
+#      transaction-id-prefix: kafkaTx-
+#      retries: 3
+#      acks: all
+#      batch-size: 16384
+#      buffer-memory: 1024000
+#      key-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+#      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+#    consumer:
+#      bootstrap-servers: 127.0.0.1:9092
+#      group-id: default-group
+#      auto-offset-reset: latest
+#      enable-auto-commit: false
+#      key-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+#      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+#      properties:
+#        spring:
+#          json:
+#            trusted:
+#              packages: "*"
+#        max-poll-records: 3
+#    listener:
+#      concurrency: 4
+#      ack-mode: manual_immediate
+#      missing-topics-fatal: false
+#      poll-timeout: 600000
+
