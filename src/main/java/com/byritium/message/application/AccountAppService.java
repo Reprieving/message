@@ -30,6 +30,10 @@ public class AccountAppService {
         redisClient.set(accountInfo.getKey(), accountInfo);
     }
 
+    public void update(AccountInfo accountInfo) {
+        redisClient.set(accountInfo.getKey(), accountInfo);
+    }
+
     public void message(MessagePayload messagePayload, Channel channel) {
         IdAuth idAuth = messagePayload.getIdAuth();
         String username = idAuth.getUsername();
