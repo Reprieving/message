@@ -6,15 +6,20 @@ import com.byritium.message.exception.AccountAuthException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
+import java.util.concurrent.ConcurrentHashMap;
+
 @Repository
 public class AccountRepository {
     @Autowired
     private RedisClient redisClient;
 
-    public AccountInfo auth(String username, String password) {
-        AccountInfo accountInfo = (AccountInfo) redisClient.get(username);
-        if (accountInfo == null || accountInfo.getPassword().equals(password)) {
-            throw new AccountAuthException("auth fail");
+    private static final ConcurrentHashMap<String, AccountInfo> map = new ConcurrentHashMap<>();
+
+    public AccountInfo findByUserName(String username) {
+        AccountInfo accountInfo = map.get(username);
+        if (accountInfo == null) {
+            accountInfo = (AccountInfo) redisClient.get(username);
+            map.putIfAbsent(username, accountInfo);
         }
         return accountInfo;
     }

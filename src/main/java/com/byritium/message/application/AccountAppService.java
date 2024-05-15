@@ -39,7 +39,6 @@ public class AccountAppService {
         String username = idAuth.getUsername();
         String password = idAuth.getUsername();
         String identifier = idAuth.getIdentifier();
-        AccountInfo accountInfo = accountRepository.auth(username, password);
 
         sessionRepository.save(username, identifier, channel.id());
 
