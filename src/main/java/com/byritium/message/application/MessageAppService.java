@@ -29,11 +29,12 @@ public class MessageAppService {
             throw new RuntimeException("auth fail");
         }
 
-
+        sessionRepository.save(username, identifier, channel);
     }
 
-    public void send2Client() {
-
+    public void send2Client(String username, String identifier, String content) {
+        Channel channel = sessionRepository.get(username, identifier);
+        channel.writeAndFlush(content);
     }
 
 
