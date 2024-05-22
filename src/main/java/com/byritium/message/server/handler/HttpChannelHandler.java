@@ -3,9 +3,7 @@ package com.byritium.message.server.handler;
 import com.byritium.message.domain.account.service.AuthService;
 import com.byritium.message.exception.AccountAuthException;
 import com.byritium.message.server.dto.MessagePayload;
-import com.byritium.message.utils.JacksonUtils;
-import com.byritium.message.utils.SpringUtils;
-import com.fasterxml.jackson.core.JsonProcessingException;
+import com.byritium.message.utils.GsonUtils;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.PooledByteBufAllocator;
 import io.netty.channel.*;
@@ -28,7 +26,7 @@ public class HttpChannelHandler extends SimpleChannelInboundHandler<Object> {
     }
 
     @Override
-    protected void channelRead0(ChannelHandlerContext channelHandlerContext, Object msg) throws JsonProcessingException {
+    protected void channelRead0(ChannelHandlerContext channelHandlerContext, Object msg) {
         Channel channel = channelHandlerContext.channel();
         FullHttpRequest fullHttpRequest = (FullHttpRequest) msg;
         HttpHeaders httpHeaders = fullHttpRequest.headers();
@@ -40,9 +38,9 @@ public class HttpChannelHandler extends SimpleChannelInboundHandler<Object> {
         String password = httpHeaders.get("password");
         String identifier = httpHeaders.get("identifier");
         String message = new String(bytes);
-        MessagePayload messagePayload = JacksonUtils.deserialize(Arrays.toString(bytes), MessagePayload.class);
+        MessagePayload messagePayload = GsonUtils.strToJavaBean(Arrays.toString(bytes), MessagePayload.class);
         try {
-            AuthService authService = SpringUtils.getBean(AuthService.class);
+            AuthService authService = null;
             authService.execute(username, password);
         } catch (AccountAuthException e) {
             ByteBuf buf = PooledByteBufAllocator.DEFAULT.buffer();

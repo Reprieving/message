@@ -3,20 +3,15 @@ package com.byritium.message.server.handler;
 import com.byritium.message.domain.account.service.AuthService;
 import com.byritium.message.exception.AccountAuthException;
 import com.byritium.message.server.dto.MessagePayload;
-import com.byritium.message.utils.JacksonUtils;
-import com.byritium.message.utils.SpringUtils;
+import com.byritium.message.utils.GsonUtils;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.channel.socket.DatagramPacket;
 import io.netty.util.CharsetUtil;
-import lombok.extern.slf4j.Slf4j;
-
-import java.util.Arrays;
 
 
-@Slf4j
 @ChannelHandler.Sharable
 public class UdpChannelHandler extends SimpleChannelInboundHandler<DatagramPacket> {
 
@@ -41,9 +36,9 @@ public class UdpChannelHandler extends SimpleChannelInboundHandler<DatagramPacke
     @Override
     protected void channelRead0(ChannelHandlerContext ctx, DatagramPacket datagramPacket) throws Exception {
         String msg = datagramPacket.content().toString(CharsetUtil.UTF_8);
-        MessagePayload messagePayload = JacksonUtils.deserialize(msg, MessagePayload.class);
+        MessagePayload messagePayload = GsonUtils.strToJavaBean(msg, MessagePayload.class);
         try {
-            AuthService authService = SpringUtils.getBean(AuthService.class);
+            AuthService authService = null;
             String username = messagePayload.getIdAuth().getUsername();
             String password = messagePayload.getIdAuth().getPassword();
             authService.execute(username, password);

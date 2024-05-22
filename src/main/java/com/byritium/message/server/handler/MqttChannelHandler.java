@@ -2,14 +2,12 @@ package com.byritium.message.server.handler;
 
 import com.byritium.message.domain.account.service.AuthService;
 import com.byritium.message.exception.AccountAuthException;
-import com.byritium.message.utils.SpringUtils;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.handler.codec.mqtt.*;
 import io.netty.util.CharsetUtil;
-import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -17,7 +15,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-@Slf4j
 @ChannelHandler.Sharable
 public class MqttChannelHandler extends SimpleChannelInboundHandler<Object> {
     private boolean authFlag = false;
@@ -45,7 +42,6 @@ public class MqttChannelHandler extends SimpleChannelInboundHandler<Object> {
     public void channelRead0(ChannelHandlerContext ctx, Object message) {
         MqttMessage mqttMessage = (MqttMessage) message;
         Channel channel = ctx.channel();
-        log.info("info--" + mqttMessage.toString());
         MqttFixedHeader mqttFixedHeader = mqttMessage.fixedHeader();
         String publishData = "";
         switch (mqttFixedHeader.messageType()) {
@@ -77,12 +73,11 @@ public class MqttChannelHandler extends SimpleChannelInboundHandler<Object> {
         String clientIdentifier = payload.clientIdentifier();
 
         try {
-            AuthService authService = SpringUtils.getBean(AuthService.class);
+            AuthService authService = null;
             authService.execute(username, password);
         } catch (AccountAuthException e) {
             MqttFixedHeader mqttFixedHeaderBack = new MqttFixedHeader(MqttMessageType.AUTH, false, MqttQoS.FAILURE, false, 0x02);
             MqttMessage mqttMessageBack = new MqttMessage(mqttFixedHeaderBack);
-            log.info("auth failure--" + mqttMessageBack);
             ctx.channel().writeAndFlush(mqttMessageBack);
         }
 
@@ -160,7 +155,6 @@ public class MqttChannelHandler extends SimpleChannelInboundHandler<Object> {
                 MqttFixedHeader mqttFixedHeaderBack = new MqttFixedHeader(MqttMessageType.PUBACK, mqttFixedHeaderInfo.isDup(), MqttQoS.AT_MOST_ONCE, mqttFixedHeaderInfo.isRetain(), 0x02);
                 //	构建PUBACK消息体
                 MqttPubAckMessage pubAck = new MqttPubAckMessage(mqttFixedHeaderBack, mqttMessageIdVariableHeaderBack);
-                log.info("back--" + pubAck.toString());
                 channel.writeAndFlush(pubAck);
                 break;
             case EXACTLY_ONCE:        //	刚好一次
@@ -169,7 +163,6 @@ public class MqttChannelHandler extends SimpleChannelInboundHandler<Object> {
                 //	构建返回报文， 可变报头
                 MqttMessageIdVariableHeader mqttMessageIdVariableHeaderBack2 = MqttMessageIdVariableHeader.from(mqttPublishMessage.variableHeader().packetId());
                 MqttMessage mqttMessageBack = new MqttMessage(mqttFixedHeaderBack2, mqttMessageIdVariableHeaderBack2);
-                log.info("back--" + mqttMessageBack.toString());
                 channel.writeAndFlush(mqttMessageBack);
                 break;
             default:
@@ -192,7 +185,6 @@ public class MqttChannelHandler extends SimpleChannelInboundHandler<Object> {
         //	构建返回报文， 可变报头
         MqttMessageIdVariableHeader mqttMessageIdVariableHeaderBack = MqttMessageIdVariableHeader.from(messageIdVariableHeader.messageId());
         MqttMessage mqttMessageBack = new MqttMessage(mqttFixedHeaderBack, mqttMessageIdVariableHeaderBack);
-        log.info("back--" + mqttMessageBack.toString());
         channel.writeAndFlush(mqttMessageBack);
     }
 
@@ -219,7 +211,6 @@ public class MqttChannelHandler extends SimpleChannelInboundHandler<Object> {
         MqttFixedHeader mqttFixedHeaderBack = new MqttFixedHeader(MqttMessageType.SUBACK, false, MqttQoS.AT_MOST_ONCE, false, 2 + topics.size());
         //	构建返回报文	订阅确认
         MqttSubAckMessage subAck = new MqttSubAckMessage(mqttFixedHeaderBack, variableHeaderBack, payloadBack);
-        log.info("back--" + subAck.toString());
         channel.writeAndFlush(subAck);
     }
 
@@ -237,7 +228,6 @@ public class MqttChannelHandler extends SimpleChannelInboundHandler<Object> {
         MqttFixedHeader mqttFixedHeaderBack = new MqttFixedHeader(MqttMessageType.UNSUBACK, false, MqttQoS.AT_MOST_ONCE, false, 2);
         //	构建返回报文	取消订阅确认
         MqttUnsubAckMessage unSubAck = new MqttUnsubAckMessage(mqttFixedHeaderBack, variableHeaderBack);
-        log.info("back--" + unSubAck.toString());
         channel.writeAndFlush(unSubAck);
     }
 
@@ -251,7 +241,6 @@ public class MqttChannelHandler extends SimpleChannelInboundHandler<Object> {
         //	心跳响应报文	11010000 00000000  固定报文
         MqttFixedHeader fixedHeader = new MqttFixedHeader(MqttMessageType.PINGRESP, false, MqttQoS.AT_MOST_ONCE, false, 0);
         MqttMessage mqttMessageBack = new MqttMessage(fixedHeader);
-        log.info("back--" + mqttMessageBack.toString());
         channel.writeAndFlush(mqttMessageBack);
     }
 

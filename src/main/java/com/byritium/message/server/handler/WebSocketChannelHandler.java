@@ -3,9 +3,7 @@ package com.byritium.message.server.handler;
 import com.byritium.message.domain.account.service.AuthService;
 import com.byritium.message.exception.AccountAuthException;
 import com.byritium.message.server.dto.MessagePayload;
-import com.byritium.message.utils.JacksonUtils;
-import com.byritium.message.utils.SpringUtils;
-import com.fasterxml.jackson.core.JsonProcessingException;
+import com.byritium.message.utils.GsonUtils;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.PooledByteBufAllocator;
 import io.netty.channel.Channel;
@@ -14,13 +12,8 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.handler.codec.http.*;
 import io.netty.handler.codec.http.websocketx.*;
-import lombok.extern.slf4j.Slf4j;
-
 import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
-import java.util.Date;
 
-@Slf4j
 public class WebSocketChannelHandler extends SimpleChannelInboundHandler<Object> {
     private WebSocketServerHandshaker handshaker;
     private boolean authFlag = false;
@@ -56,7 +49,7 @@ public class WebSocketChannelHandler extends SimpleChannelInboundHandler<Object>
                     String username = httpHeaders.get("username");
                     String password = httpHeaders.get("password");
                     String identifier = httpHeaders.get("identifier");
-                    AuthService authService = SpringUtils.getBean(AuthService.class);
+                    AuthService authService = null;
                     authService.execute(username, password);
                     handshaker.handshake(channel, req);
                     authFlag = true;
@@ -74,19 +67,15 @@ public class WebSocketChannelHandler extends SimpleChannelInboundHandler<Object>
                     handshaker.close(channel, (CloseWebSocketFrame) frame.retain());
                 }
                 if (!(frame instanceof TextWebSocketFrame)) {
-                    log.debug("不支持二进制消息");
                     throw new UnsupportedOperationException(String.format("%s frame types not supported", frame.getClass().getName()));
                 }
                 String content = ((TextWebSocketFrame) frame).text();
-                MessagePayload messagePayload = JacksonUtils.deserialize(content, MessagePayload.class);
+                MessagePayload messagePayload = GsonUtils.strToJavaBean(content, MessagePayload.class);
             }
         } catch (AccountAuthException e) {
-            log.error(e.getMessage());
             closeChannel(channel, "auth fail");
         } catch (UnsupportedOperationException e) {
             closeChannel(channel, "only support text frame types");
-        } catch (JsonProcessingException e) {
-            closeChannel(channel, "data deserialize fail");
         }
 
     }
@@ -94,13 +83,11 @@ public class WebSocketChannelHandler extends SimpleChannelInboundHandler<Object>
     @Override
     public void channelActive(ChannelHandlerContext ctx) {
         //添加连接
-        log.debug("客户端加入连接：" + ctx.channel());
     }
 
     @Override
     public void channelInactive(ChannelHandlerContext ctx) {
         //断开连接
-        log.debug("客户端断开连接：" + ctx.channel());
     }
 
     @Override

@@ -6,17 +6,13 @@ import com.byritium.message.domain.account.repository.SessionRepository;
 import com.byritium.message.server.dto.IdAuth;
 import com.byritium.message.server.dto.MessagePayload;
 import io.netty.channel.Channel;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-import org.springframework.util.Assert;
 
-@Service
 public class MessageAppService {
 
-    @Autowired
+
     private AccountRepository accountRepository;
 
-    @Autowired
+
     private SessionRepository sessionRepository;
 
     public void send2Server(MessagePayload messagePayload, Channel channel) {
